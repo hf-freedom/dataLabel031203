@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - 待办事项系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #d68910;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-in-progress {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .status-overdue {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: #333;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .user-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .user-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .user-checkbox:hover {
+            background: #e0e0e0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>管理员后台</h1>
+        <div class="user-info">
+            <span id="userName"></span>
+            <button class="btn btn-danger" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('overview')">概览</button>
+            <button class="tab" onclick="switchTab('all-todos')">所有待办</button>
+            <button class="tab" onclick="switchTab('push-todo')">推送待办</button>
+        </div>
+
+        <!-- 概览 -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">总用户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTodos">0</div>
+                    <div class="stat-label">总待办数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingTodos">0</div>
+                    <div class="stat-label">待处理</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="overdueTodos">0</div>
+                    <div class="stat-label">已逾期</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 所有待办 -->
+        <div id="all-todos" class="tab-content">
+            <div class="card">
+                <h3>所有用户待办事项</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>所属用户</th>
+                            <th>状态</th>
+                            <th>截止时间</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allTodosTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 推送待办 -->
+        <div id="push-todo" class="tab-content">
+            <div class="card">
+                <h3>给指定用户推送待办</h3>
+                <form id="pushTodoForm">
+                    <div class="form-group">
+                        <label>选择用户</label>
+                        <div class="user-selector" id="userSelector">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pushTitle">标题</label>
+                        <input type="text" id="pushTitle" required placeholder="请输入待办标题">
+                    </div>
+                    <div class="form-group">
+                        <label for="pushContent">内容</label>
+                        <textarea id="pushContent" placeholder="请输入待办内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pushDeadline">截止时间</label>
+                        <input type="datetime-local" id="pushDeadline" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">推送给选中用户</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>全员推送待办</h3>
+                <form id="pushAllForm">
+                    <div class="form-group">
+                        <label for="pushAllTitle">标题</label>
+                        <input type="text" id="pushAllTitle" required placeholder="请输入待办标题">
+                    </div>
+                    <div class="form-group">
+                        <label for="pushAllContent">内容</label>
+                        <textarea id="pushAllContent" placeholder="请输入待办内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pushAllDeadline">截止时间</label>
+                        <input type="datetime-local" id="pushAllDeadline" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning">推送给所有用户</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let users = [];
+        let todos = [];
+
+        // 检查登录状态
+        fetch('/api/user/current')
+            .then(response => {
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    currentUser = data.data;
+                    if (!currentUser.role === 'ADMIN') {
+                        window.location.href = '/todo';
+                        return;
+                    }
+                    document.getElementById('userName').textContent = '管理员：' + currentUser.nickname;
+                    loadData();
+                }
+            });
+
+        // 加载数据
+        function loadData() {
+            loadUsers();
+            loadAllTodos();
+        }
+
+        // 加载用户列表
+        function loadUsers() {
+            fetch('/api/user/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        users = data.data;
+                        document.getElementById('totalUsers').textContent = users.length;
+                        renderUserSelector();
+                    }
+                });
+        }
+
+        // 加载所有待办
+        function loadAllTodos() {
+            fetch('/api/todo/admin/list-all')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        todos = data.data;
+                        document.getElementById('totalTodos').textContent = todos.length;
+                        document.getElementById('pendingTodos').textContent = 
+                            todos.filter(t => t.status === 'PENDING').length;
+                        document.getElementById('overdueTodos').textContent = 
+                            todos.filter(t => t.status === 'OVERDUE').length;
+                        renderAllTodos();
+                    }
+                });
+        }
+
+        // 渲染用户选择器
+        function renderUserSelector() {
+            const container = document.getElementById('userSelector');
+            const normalUsers = users.filter(u => u.role !== 'ADMIN');
+            container.innerHTML = normalUsers.map(user => `
+                <label class="user-checkbox">
+                    <input type="checkbox" name="targetUsers" value="${user.id}">
+                    <span>${user.nickname} (${user.username})</span>
+                </label>
+            `).join('');
+        }
+
+        // 渲染所有待办
+        function renderAllTodos() {
+            const tbody = document.getElementById('allTodosTable');
+            tbody.innerHTML = todos.map(todo => {
+                const user = users.find(u => u.id === todo.userId);
+                const userName = user ? user.nickname : '未知用户';
+                
+                const statusClass = {
+                    'PENDING': 'status-pending',
+                    'IN_PROGRESS': 'status-in-progress',
+                    'COMPLETED': 'status-completed',
+                    'OVERDUE': 'status-overdue'
+                }[todo.status];
+
+                const statusText = {
+                    'PENDING': '待处理',
+                    'IN_PROGRESS': '进行中',
+                    'COMPLETED': '已完成',
+                    'OVERDUE': '已逾期'
+                }[todo.status];
+
+                return `
+                    <tr>
+                        <td>${todo.title}</td>
+                        <td>${userName}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${todo.deadline ? new Date(todo.deadline).toLocaleString('zh-CN') : '-'}</td>
+                        <td>${todo.createTime ? new Date(todo.createTime).toLocaleString('zh-CN') : '-'}</td>
+                        <td>
+                            <button class="btn btn-danger btn-small" onclick="deleteTodo('${todo.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 切换标签
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'all-todos') {
+                loadAllTodos();
+            }
+        }
+
+        // 删除待办
+        function deleteTodo(id) {
+            if (!confirm('确定要删除这个待办事项吗？')) return;
+            
+            fetch(`/api/todo/delete/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadAllTodos();
+                    }
+                });
+        }
+
+        // 推送待办给指定用户
+        document.getElementById('pushTodoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const selectedUsers = Array.from(document.querySelectorAll('input[name="targetUsers"]:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedUsers.length === 0) {
+                alert('请至少选择一个用户');
+                return;
+            }
+
+            const todo = {
+                title: document.getElementById('pushTitle').value,
+                content: document.getElementById('pushContent').value,
+                deadline: document.getElementById('pushDeadline').value
+            };
+
+            let completed = 0;
+            selectedUsers.forEach(userId => {
+                fetch('/api/todo/admin/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetUserId: userId, todo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    completed++;
+                    if (completed === selectedUsers.length) {
+                        alert('推送成功！');
+                        document.getElementById('pushTodoForm').reset();
+                    }
+                });
+            });
+        });
+
+        // 全员推送
+        document.getElementById('pushAllForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const todo = {
+                title: document.getElementById('pushAllTitle').value,
+                content: document.getElementById('pushAllContent').value,
+                deadline: document.getElementById('pushAllDeadline').value
+            };
+
+            fetch('/api/todo/admin/push-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(todo)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('全员推送成功！');
+                    document.getElementById('pushAllForm').reset();
+                }
+            });
+        });
+
+        // 退出登录
+        function logout() {
+            fetch('/api/user/logout')
+                .then(() => {
+                    window.location.href = '/login';
+                });
+        }
+    </script>
+</body>
+</html>

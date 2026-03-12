@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的待办 - 待办事项系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #219a52;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .todo-list {
+            display: grid;
+            gap: 15px;
+        }
+        .todo-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .todo-card.completed {
+            border-left-color: #27ae60;
+            opacity: 0.8;
+        }
+        .todo-card.overdue {
+            border-left-color: #e74c3c;
+        }
+        .todo-card.in-progress {
+            border-left-color: #f39c12;
+        }
+        .todo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+        .todo-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .todo-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-in-progress {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .status-overdue {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .todo-content {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .todo-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .todo-deadline {
+            color: #999;
+            font-size: 14px;
+        }
+        .todo-deadline.near {
+            color: #f57c00;
+            font-weight: bold;
+        }
+        .todo-deadline.overdue {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>我的待办事项</h1>
+        <div class="user-info">
+            <span id="userName"></span>
+            <button class="btn btn-danger" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>状态筛选：</label>
+                <select id="statusFilter" onchange="loadTodos()">
+                    <option value="">全部</option>
+                    <option value="PENDING">待处理</option>
+                    <option value="IN_PROGRESS">进行中</option>
+                    <option value="COMPLETED">已完成</option>
+                    <option value="OVERDUE">已逾期</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="openModal()">+ 新建待办</button>
+        </div>
+
+        <div id="todoList" class="todo-list">
+            <div class="empty-state">
+                <h3>暂无待办事项</h3>
+                <p>点击"新建待办"按钮添加您的第一个待办事项</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="todoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">新建待办</h2>
+            </div>
+            <form id="todoForm">
+                <input type="hidden" id="todoId">
+                <div class="form-group">
+                    <label for="title">标题</label>
+                    <input type="text" id="title" required placeholder="请输入待办标题">
+                </div>
+                <div class="form-group">
+                    <label for="content">内容</label>
+                    <textarea id="content" placeholder="请输入待办内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="deadline">截止时间</label>
+                    <input type="datetime-local" id="deadline" required>
+                </div>
+                <div class="form-group" id="statusGroup" style="display:none;">
+                    <label for="editStatus">状态</label>
+                    <select id="editStatus">
+                        <option value="PENDING">待处理</option>
+                        <option value="IN_PROGRESS">进行中</option>
+                        <option value="COMPLETED">已完成</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // 检查登录状态
+        fetch('/api/user/current')
+            .then(response => {
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    currentUser = data.data;
+                    document.getElementById('userName').textContent = '欢迎，' + currentUser.nickname;
+                    loadTodos();
+                }
+            });
+
+        // 加载待办列表
+        function loadTodos() {
+            const status = document.getElementById('statusFilter').value;
+            const url = status ? `/api/todo/list-by-status/${status}` : '/api/todo/list';
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderTodos(data.data);
+                    }
+                });
+        }
+
+        // 渲染待办列表
+        function renderTodos(todos) {
+            const container = document.getElementById('todoList');
+            if (!todos || todos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无待办事项</h3>
+                        <p>点击"新建待办"按钮添加您的第一个待办事项</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = todos.map(todo => {
+                const statusClass = {
+                    'PENDING': 'status-pending',
+                    'IN_PROGRESS': 'status-in-progress',
+                    'COMPLETED': 'status-completed',
+                    'OVERDUE': 'status-overdue'
+                }[todo.status];
+
+                const statusText = {
+                    'PENDING': '待处理',
+                    'IN_PROGRESS': '进行中',
+                    'COMPLETED': '已完成',
+                    'OVERDUE': '已逾期'
+                }[todo.status];
+
+                const cardClass = {
+                    'PENDING': '',
+                    'IN_PROGRESS': 'in-progress',
+                    'COMPLETED': 'completed',
+                    'OVERDUE': 'overdue'
+                }[todo.status];
+
+                const deadlineClass = todo.status === 'OVERDUE' ? 'overdue' : 
+                                     (new Date(todo.deadline) - new Date() < 30 * 60 * 1000 ? 'near' : '');
+
+                const deadlineText = todo.deadline ? new Date(todo.deadline).toLocaleString('zh-CN') : '未设置';
+
+                return `
+                    <div class="todo-card ${cardClass}">
+                        <div class="todo-header">
+                            <div class="todo-title">${todo.title}</div>
+                            <span class="todo-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="todo-content">${todo.content || '无内容'}</div>
+                        <div class="todo-footer">
+                            <div class="todo-deadline ${deadlineClass}">
+                                截止时间：${deadlineText}
+                            </div>
+                            <div class="todo-actions">
+                                ${todo.status !== 'COMPLETED' && todo.status !== 'OVERDUE' ? `
+                                    <button class="btn btn-success btn-small" onclick="completeTodo('${todo.id}')">完成</button>
+                                    <button class="btn btn-primary btn-small" onclick="editTodo('${todo.id}')">编辑</button>
+                                ` : ''}
+                                <button class="btn btn-danger btn-small" onclick="deleteTodo('${todo.id}')">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 打开模态框
+        function openModal() {
+            document.getElementById('todoForm').reset();
+            document.getElementById('todoId').value = '';
+            document.getElementById('modalTitle').textContent = '新建待办';
+            document.getElementById('statusGroup').style.display = 'none';
+            document.getElementById('todoModal').classList.add('active');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('todoModal').classList.remove('active');
+        }
+
+        // 编辑待办
+        function editTodo(id) {
+            fetch(`/api/todo/get/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const todo = data.data;
+                        document.getElementById('todoId').value = todo.id;
+                        document.getElementById('title').value = todo.title;
+                        document.getElementById('content').value = todo.content || '';
+                        document.getElementById('deadline').value = todo.deadline ? todo.deadline.substring(0, 16) : '';
+                        document.getElementById('editStatus').value = todo.status;
+                        document.getElementById('modalTitle').textContent = '编辑待办';
+                        document.getElementById('statusGroup').style.display = 'block';
+                        document.getElementById('todoModal').classList.add('active');
+                    }
+                });
+        }
+
+        // 完成待办
+        function completeTodo(id) {
+            fetch('/api/todo/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: 'COMPLETED' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadTodos();
+                }
+            });
+        }
+
+        // 删除待办
+        function deleteTodo(id) {
+            if (!confirm('确定要删除这个待办事项吗？')) return;
+            
+            fetch(`/api/todo/delete/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadTodos();
+                    }
+                });
+        }
+
+        // 表单提交
+        document.getElementById('todoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('todoId').value;
+            const todo = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value,
+                deadline: document.getElementById('deadline').value
+            };
+
+            if (id) {
+                todo.id = id;
+                todo.status = document.getElementById('editStatus').value;
+            }
+
+            const url = id ? '/api/todo/update' : '/api/todo/create';
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(todo)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    loadTodos();
+                }
+            });
+        });
+
+        // 退出登录
+        function logout() {
+            fetch('/api/user/logout')
+                .then(() => {
+                    window.location.href = '/login';
+                });
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('todoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
