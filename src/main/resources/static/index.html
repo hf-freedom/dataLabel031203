@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SI 待办管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .user-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-selector label {
+            font-weight: bold;
+            color: #333;
+        }
+        .user-selector select {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .user-info {
+            margin-left: auto;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .admin-badge {
+            background: #ff6b6b;
+            color: white;
+        }
+        .user-badge {
+            background: #4ecdc4;
+            color: white;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+        .btn-success {
+            background: #4ecdc4;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #45b7aa;
+        }
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #ee5a5a;
+        }
+        .btn-warning {
+            background: #feca57;
+            color: #333;
+        }
+        .btn-warning:hover {
+            background: #f9b93e;
+        }
+        .todo-list {
+            list-style: none;
+        }
+        .todo-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .todo-item.overdue {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+        }
+        .todo-item.completed {
+            border-left-color: #4ecdc4;
+            background: #f0fffe;
+            opacity: 0.7;
+        }
+        .todo-item h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .todo-item p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .todo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .status-in-progress {
+            background: #667eea;
+            color: white;
+        }
+        .status-completed {
+            background: #4ecdc4;
+            color: white;
+        }
+        .status-overdue {
+            background: #ff6b6b;
+            color: white;
+        }
+        .broadcast-tag {
+            background: #feca57;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .admin-panel {
+            grid-column: 1 / -1;
+        }
+        .hidden {
+            display: none;
+        }
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        .message.success {
+            background: #4ecdc4;
+        }
+        .message.error {
+            background: #ff6b6b;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 SI 待办管理系统</h1>
+            <p>高效管理您的待办事项</p>
+        </div>
+
+        <div class="user-selector">
+            <label>当前用户：</label>
+            <select id="userSelect" onchange="onUserChange()">
+                <option value="">请选择用户</option>
+            </select>
+            <span id="userBadge" class="user-info hidden"></span>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>➕ 创建待办</h2>
+                <div class="form-group">
+                    <label>标题 *</label>
+                    <input type="text" id="createTitle" placeholder="请输入待办标题">
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="createContent" placeholder="请输入待办内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>截止时间</label>
+                    <input type="datetime-local" id="createDeadline">
+                </div>
+                <button class="btn btn-primary" onclick="createTodo()">创建待办</button>
+            </div>
+
+            <div class="panel">
+                <h2>📝 待办列表</h2>
+                <button class="btn btn-success" onclick="loadTodos()">刷新列表</button>
+                <ul class="todo-list" id="todoList">
+                    <li class="todo-item">
+                        <p style="text-align: center; color: #999;">请先选择用户</p>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="panel admin-panel hidden" id="adminPanel">
+                <h2>📢 管理员 - 全员推送</h2>
+                <div class="form-group">
+                    <label>标题 *</label>
+                    <input type="text" id="broadcastTitle" placeholder="请输入推送标题">
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="broadcastContent" placeholder="请输入推送内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>截止时间</label>
+                    <input type="datetime-local" id="broadcastDeadline">
+                </div>
+                <button class="btn btn-danger" onclick="broadcastTodo()">全员推送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/todo';
+        let currentUser = null;
+
+        async function fetchUsers() {
+            const response = await fetch(`${API_BASE}/users`);
+            const result = await response.json();
+            if (result.success) {
+                const select = document.getElementById('userSelect');
+                result.data.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.userId;
+                    option.textContent = `${user.username} (${user.userId})`;
+                    option.dataset.isAdmin = user.admin;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function onUserChange() {
+            const select = document.getElementById('userSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            currentUser = {
+                userId: select.value,
+                isAdmin: selectedOption.dataset.isAdmin === 'true'
+            };
+
+            const badge = document.getElementById('userBadge');
+            badge.classList.remove('hidden', 'admin-badge', 'user-badge');
+            badge.classList.add(currentUser.isAdmin ? 'admin-badge' : 'user-badge');
+            badge.textContent = currentUser.isAdmin ? '管理员' : '普通用户';
+
+            const adminPanel = document.getElementById('adminPanel');
+            if (currentUser.isAdmin) {
+                adminPanel.classList.remove('hidden');
+            } else {
+                adminPanel.classList.add('hidden');
+            }
+
+            loadTodos();
+        }
+
+        async function loadTodos() {
+            if (!currentUser) {
+                showMessage('请先选择用户', 'error');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE}/list?userId=${currentUser.userId}`);
+            const result = await response.json();
+            
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+
+            if (result.success && result.data.length > 0) {
+                result.data.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = `todo-item ${todo.status.toLowerCase().replace('_', '-')}`;
+                    
+                    const statusClass = `status-${todo.status.toLowerCase().replace('_', '-')}`;
+                    const statusText = {
+                        'IN_PROGRESS': '进行中',
+                        'COMPLETED': '已完成',
+                        'OVERDUE': '已逾期'
+                    }[todo.status];
+
+                    const deadline = todo.deadline ? formatDate(todo.deadline) : '无截止时间';
+                    const broadcastTag = todo.broadcast ? '<span class="broadcast-tag">全员推送</span>' : '';
+
+                    li.innerHTML = `
+                        <h3>${todo.title}${broadcastTag}</h3>
+                        <p>${todo.content || '无内容'}</p>
+                        <div class="todo-meta">
+                            <span>截止: ${deadline}</span>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        ${todo.status !== 'COMPLETED' ? `
+                            <div style="margin-top: 10px;">
+                                <button class="btn btn-success" onclick="completeTodo('${todo.id}')">完成</button>
+                                <button class="btn btn-warning" onclick="editTodo('${todo.id}')">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteTodo('${todo.id}')">删除</button>
+                            </div>
+                        ` : ''}
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = '<li class="todo-item"><p style="text-align: center; color: #999;">暂无待办事项</p></li>';
+            }
+        }
+
+        async function createTodo() {
+            if (!currentUser) {
+                showMessage('请先选择用户', 'error');
+                return;
+            }
+
+            const title = document.getElementById('createTitle').value;
+            const content = document.getElementById('createContent').value;
+            const deadlineInput = document.getElementById('createDeadline').value;
+
+            if (!title) {
+                showMessage('请输入标题', 'error');
+                return;
+            }
+
+            const body = {
+                userId: currentUser.userId,
+                title: title,
+                content: content
+            };
+
+            if (deadlineInput) {
+                body.deadline = formatDateTimeForApi(deadlineInput);
+            }
+
+            const response = await fetch(`${API_BASE}/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('创建成功', 'success');
+                document.getElementById('createTitle').value = '';
+                document.getElementById('createContent').value = '';
+                document.getElementById('createDeadline').value = '';
+                loadTodos();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        async function completeTodo(todoId) {
+            const response = await fetch(`${API_BASE}/complete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ todoId: todoId })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('已完成', 'success');
+                loadTodos();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        async function deleteTodo(todoId) {
+            if (!confirm('确定要删除这个待办吗？')) return;
+
+            const response = await fetch(`${API_BASE}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ todoId: todoId })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('删除成功', 'success');
+                loadTodos();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        function editTodo(todoId) {
+            const newTitle = prompt('请输入新标题：');
+            if (newTitle === null) return;
+
+            const newContent = prompt('请输入新内容：');
+
+            updateTodoApi(todoId, newTitle, newContent);
+        }
+
+        async function updateTodoApi(todoId, title, content) {
+            const body = { todoId: todoId };
+            if (title) body.title = title;
+            if (content !== null) body.content = content;
+
+            const response = await fetch(`${API_BASE}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('更新成功', 'success');
+                loadTodos();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        async function broadcastTodo() {
+            if (!currentUser || !currentUser.isAdmin) {
+                showMessage('无权限', 'error');
+                return;
+            }
+
+            const title = document.getElementById('broadcastTitle').value;
+            const content = document.getElementById('broadcastContent').value;
+            const deadlineInput = document.getElementById('broadcastDeadline').value;
+
+            if (!title) {
+                showMessage('请输入推送标题', 'error');
+                return;
+            }
+
+            const body = {
+                operatorId: currentUser.userId,
+                title: title,
+                content: content
+            };
+
+            if (deadlineInput) {
+                body.deadline = formatDateTimeForApi(deadlineInput);
+            }
+
+            const response = await fetch(`${API_BASE}/broadcast`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('全员推送成功', 'success');
+                document.getElementById('broadcastTitle').value = '';
+                document.getElementById('broadcastContent').value = '';
+                document.getElementById('broadcastDeadline').value = '';
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function formatDateTimeForApi(localDateTime) {
+            const date = new Date(localDateTime);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function showMessage(text, type) {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 3000);
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>

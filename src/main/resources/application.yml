@@ -1,0 +1,6 @@
+server:
+  port: 10888
+
+spring:
+  application:
+    name: si-todo

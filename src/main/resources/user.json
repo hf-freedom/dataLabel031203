@@ -1,0 +1,22 @@
+[
+  {
+    "userId": "admin",
+    "username": "管理员",
+    "isAdmin": true
+  },
+  {
+    "userId": "user001",
+    "username": "张三",
+    "isAdmin": false
+  },
+  {
+    "userId": "user002",
+    "username": "李四",
+    "isAdmin": false
+  },
+  {
+    "userId": "user003",
+    "username": "王五",
+    "isAdmin": false
+  }
+]
