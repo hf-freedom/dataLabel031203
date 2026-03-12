@@ -1,0 +1,1 @@
+[{"id": 1, "username": "admin", "password": "admin123", "role": "ADMIN"}, {"id": 2, "username": "zhangsan", "password": "123456", "role": "USER"}, {"id": 3, "username": "lisi", "password": "123456", "role": "USER"}, {"id": 4, "username": "wangwu", "password": "123456", "role": "USER"}]
