@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "admin123",
+      "nickname": "管理员",
+      "role": "ADMIN"
+    },
+    {
+      "id": "2",
+      "username": "zhangsan",
+      "password": "123456",
+      "nickname": "张三",
+      "role": "USER"
+    },
+    {
+      "id": "3",
+      "username": "lisi",
+      "password": "123456",
+      "nickname": "李四",
+      "role": "USER"
+    },
+    {
+      "id": "4",
+      "username": "wangwu",
+      "password": "123456",
+      "nickname": "王五",
+      "role": "USER"
+    },
+    {
+      "id": "5",
+      "username": "zhaoliu",
+      "password": "123456",
+      "nickname": "赵六",
+      "role": "USER"
+    }
+  ]
+}

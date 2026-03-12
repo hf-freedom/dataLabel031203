@@ -1,0 +1,17 @@
+server:
+  port: 10086
+
+spring:
+  application:
+    name: todo-plugin
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+
+# 用户配置文件路径
+user:
+  config:
+    path: classpath:user.json

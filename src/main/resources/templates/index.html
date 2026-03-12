@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .welcome-container {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+        }
+        .feature {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            max-width: 250px;
+        }
+        .feature h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        .feature p {
+            font-size: 14px;
+            margin-bottom: 0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <h1>待办事项管理系统</h1>
+        <p>高效管理您的待办事项，支持个人管理和全员推送</p>
+        <a href="/login" class="btn">立即开始</a>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>个人待办</h3>
+                <p>创建、编辑、管理您的个人待办事项，支持多种状态跟踪</p>
+            </div>
+            <div class="feature">
+                <h3>智能提醒</h3>
+                <p>待办事项即将到期前自动提醒，避免遗漏重要事项</p>
+            </div>
+            <div class="feature">
+                <h3>全员推送</h3>
+                <p>管理员可向全员或指定用户推送待办事项</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
