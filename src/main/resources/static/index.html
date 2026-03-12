@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户代办系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/element-ui@2.15.13/lib/theme-chalk/index.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.13/lib/index.js"></script>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        .todo-item {
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .status-IN_PROGRESS {
+            border-left: 4px solid #409EFF;
+        }
+        .status-COMPLETED {
+            border-left: 4px solid #67C23A;
+            background-color: #f5f7fa;
+        }
+        .status-OVERDUE {
+            border-left: 4px solid #F56C6C;
+            background-color: #fef0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div v-if="!currentUser" class="login-form">
+            <el-card>
+                <div slot="header" class="clearfix">
+                    <span>用户登录</span>
+                </div>
+                <el-form :model="loginForm" label-width="80px">
+                    <el-form-item label="用户名">
+                        <el-input v-model="loginForm.username"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码">
+                        <el-input type="password" v-model="loginForm.password"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="login">登录</el-button>
+                    </el-form-item>
+                </el-form>
+                <div style="text-align: center; color: #999;">
+                    <p>默认用户：</p>
+                    <p>admin / admin123 (管理员)</p>
+                    <p>zhangsan / 123456</p>
+                    <p>lisi / 123456</p>
+                </div>
+            </el-card>
+        </div>
+
+        <div v-else>
+            <el-row :gutter="20">
+                <el-col :span="24">
+                    <el-card>
+                        <div slot="header" class="clearfix">
+                            <span>欢迎, {{ currentUser.username }} ({{ currentUser.role === 'ADMIN' ? '管理员' : '普通用户' }})</span>
+                            <el-button style="float: right; padding: 3px 0" type="text" @click="logout">退出</el-button>
+                        </div>
+
+                        <el-row :gutter="20">
+                            <el-col :span="currentUser.role === 'ADMIN' ? 12 : 24">
+                                <h3>我的代办</h3>
+                                <el-button type="primary" @click="showAddTodo = true" size="small">添加代办</el-button>
+                                <div v-for="todo in todos" :key="todo.id" :class="['todo-item', 'status-' + todo.status]">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0;">{{ todo.content }}</h4>
+                                            <p style="margin: 5px 0; color: #666;">
+                                                截止时间: {{ formatDate(todo.deadline) }}
+                                                <span style="margin-left: 10px;">状态: {{ getStatusText(todo.status) }}</span>
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <el-button size="mini" @click="editTodo(todo)">编辑</el-button>
+                                            <el-button size="mini" type="danger" @click="deleteTodo(todo.id)">删除</el-button>
+                                            <el-button v-if="todo.status === 'IN_PROGRESS'" size="mini" type="success" @click="completeTodo(todo)">完成</el-button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </el-col>
+
+                            <el-col :span="12" v-if="currentUser.role === 'ADMIN'">
+                                <h3>管理员功能 - 推送代办</h3>
+                                <el-form :model="pushForm" label-width="80px">
+                                    <el-form-item label="内容">
+                                        <el-input v-model="pushForm.content" type="textarea"></el-input>
+                                    </el-form-item>
+                                    <el-form-item label="截止时间">
+                                        <el-date-picker
+                                            v-model="pushForm.deadline"
+                                            type="datetime"
+                                            placeholder="选择截止时间"
+                                            format="yyyy-MM-dd HH:mm:ss"
+                                            value-format="yyyy-MM-dd HH:mm:ss">
+                                        </el-date-picker>
+                                    </el-form-item>
+                                    <el-form-item>
+                                        <el-button type="primary" @click="pushTodo">推送给所有用户</el-button>
+                                    </el-form-item>
+                                </el-form>
+                            </el-col>
+                        </el-row>
+                    </el-card>
+                </el-col>
+            </el-row>
+        </div>
+
+        <el-dialog title="添加/编辑代办" :visible.sync="showAddTodo" width="500px">
+            <el-form :model="todoForm" label-width="80px">
+                <el-form-item label="内容">
+                    <el-input v-model="todoForm.content" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="截止时间">
+                    <el-date-picker
+                        v-model="todoForm.deadline"
+                        type="datetime"
+                        placeholder="选择截止时间"
+                        format="yyyy-MM-dd HH:mm:ss"
+                        value-format="yyyy-MM-dd HH:mm:ss">
+                    </el-date-picker>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="showAddTodo = false">取 消</el-button>
+                <el-button type="primary" @click="saveTodo">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                loginForm: {
+                    username: '',
+                    password: ''
+                },
+                currentUser: null,
+                todos: [],
+                showAddTodo: false,
+                todoForm: {
+                    id: null,
+                    content: '',
+                    deadline: '',
+                    status: 'IN_PROGRESS'
+                },
+                pushForm: {
+                    content: '',
+                    deadline: ''
+                }
+            },
+            methods: {
+                async login() {
+                    try {
+                        const res = await axios.post('/api/users/login', this.loginForm);
+                        if (res.data.code === 200) {
+                            this.currentUser = res.data.data;
+                            this.loadTodos();
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                    } catch (e) {
+                        this.$message.error('登录失败');
+                    }
+                },
+                logout() {
+                    this.currentUser = null;
+                    this.todos = [];
+                },
+                async loadTodos() {
+                    if (this.currentUser) {
+                        const res = await axios.get(`/api/todos/user/${this.currentUser.id}`);
+                        if (res.data.code === 200) {
+                            this.todos = res.data.data;
+                        }
+                    }
+                },
+                editTodo(todo) {
+                    this.todoForm = {
+                        id: todo.id,
+                        content: todo.content,
+                        deadline: this.formatDate(todo.deadline),
+                        status: todo.status,
+                        userId: todo.userId
+                    };
+                    this.showAddTodo = true;
+                },
+                async saveTodo() {
+                    try {
+                        if (this.todoForm.id) {
+                            await axios.put('/api/todos', this.todoForm);
+                        } else {
+                            this.todoForm.userId = this.currentUser.id;
+                            await axios.post('/api/todos', this.todoForm);
+                        }
+                        this.showAddTodo = false;
+                        this.todoForm = { id: null, content: '', deadline: '', status: 'IN_PROGRESS' };
+                        this.loadTodos();
+                        this.$message.success('保存成功');
+                    } catch (e) {
+                        this.$message.error('保存失败');
+                    }
+                },
+                async deleteTodo(id) {
+                    try {
+                        await axios.delete(`/api/todos/${id}`);
+                        this.loadTodos();
+                        this.$message.success('删除成功');
+                    } catch (e) {
+                        this.$message.error('删除失败');
+                    }
+                },
+                async completeTodo(todo) {
+                    todo.status = 'COMPLETED';
+                    try {
+                        await axios.put('/api/todos', todo);
+                        this.loadTodos();
+                        this.$message.success('标记完成');
+                    } catch (e) {
+                        this.$message.error('操作失败');
+                    }
+                },
+                async pushTodo() {
+                    try {
+                        await axios.post('/api/todos/push', this.pushForm);
+                        this.pushForm = { content: '', deadline: '' };
+                        this.$message.success('推送成功');
+                    } catch (e) {
+                        this.$message.error('推送失败');
+                    }
+                },
+                formatDate(date) {
+                    if (!date) return '';
+                    const d = new Date(date);
+                    return d.getFullYear() + '-' + 
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(d.getDate()).padStart(2, '0') + ' ' + 
+                        String(d.getHours()).padStart(2, '0') + ':' + 
+                        String(d.getMinutes()).padStart(2, '0') + ':' + 
+                        String(d.getSeconds()).padStart(2, '0');
+                },
+                getStatusText(status) {
+                    const map = {
+                        'IN_PROGRESS': '进行中',
+                        'COMPLETED': '已完成',
+                        'OVERDUE': '已逾期'
+                    };
+                    return map[status] || status;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
